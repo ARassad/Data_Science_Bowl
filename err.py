@@ -22,3 +22,5 @@ for n in range(len(im_id)):
     for i in range(0, len(pixs), 2):
         if count <= int(pixs[i]) + int(pixs[i+1]):
             print("WARNING")
+
+# ДРАТУТИ
