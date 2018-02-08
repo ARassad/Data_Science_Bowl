@@ -4,3 +4,4 @@ data_preparation.py : формирует входные данные для mode
 model_preparation.py : создание и тренировка модели, сохраняет лучший вариант модели в файл model-dsbowl2018-1.h5
 prediction.py : формирует маски на тестовых данных, результат в файле sub-dsbowl2018-1.csv
 function.py : функции метрики и кодирования
+data_augmentation : функции аугментации данных
