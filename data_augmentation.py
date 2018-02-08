@@ -25,11 +25,10 @@ def data_rotate():
         for item in items:
             if item == dp.NAME_SAVED_IMAGE + dp.IMG_FORMAT:
                 if os.path.isfile(path + dp.NAME_SAVED_MASK + dp.IMG_FORMAT):
-                    image = imread(path + dp.NAME_SAVED_IMAGE + dp.IMG_FORMAT)
-                    mask = imread(path + dp.NAME_SAVED_MASK + dp.IMG_FORMAT)
-                    for angle in [90, 180, 270]:
-                        imsave(path + dp.NAME_SAVED_IMAGE + '_' + str(angle) + dp.IMG_FORMAT, rotate(image, angle))
-                        imsave(path + dp.NAME_SAVED_MASK + '_' + str(angle) + dp.IMG_FORMAT, rotate(mask, angle))
+                    for nameSaved in [dp.NAME_SAVED_IMAGE, dp.NAME_SAVED_MASK]:
+                        pic = imread(path + nameSaved + dp.IMG_FORMAT)
+                        for angle in [90,180,270]:
+                            imsave(path + nameSaved + '_' + str(angle) + dp.IMG_FORMAT, rotate(pic, angle))
 
 
 if __name__ == "__main__":
