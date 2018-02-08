@@ -1,36 +1,33 @@
 import os
 import warnings
-
 import numpy as np
 
 from tqdm import tqdm
 from skimage.io import imread, imsave
 from skimage.transform import resize
 
-# Set some parameters
 IMG_WIDTH = 128
 IMG_HEIGHT = 128
 IMG_CHANNELS = 3
-TRAIN_PATH = 'stage1_train/'
-TEST_PATH = 'stage1_test/'
-SAVE_PATH = 'input_data/'
+TRAIN_PATH = 'data/stage1_train/'
+TEST_PATH = 'data/stage1_test/'
+SAVE_PATH = 'data/input_data/'
 TRAIN_SAVE_PATH = SAVE_PATH + 'train/'
 TEST_SAVE_PATH = SAVE_PATH + 'test/'
-NAME_SAVED_IMAGE = 'image.png'
-NAME_SAVED_MASK = 'mask.png'
+NAME_SAVED_IMAGE = 'image'
+NAME_SAVED_MASK = 'mask'
+IMG_FORMAT = '.png'
 
 
 def get_train_data():
-
     if not os.path.isdir(TRAIN_SAVE_PATH):
         raise OSError
 
-    # Get IDs
     ids = next(os.walk(TRAIN_SAVE_PATH))[1]
 
-    # Get and resize images and masks
-    images = np.zeros((len(ids), IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS), dtype=np.uint8)
-    masks = np.zeros((len(ids), IMG_HEIGHT, IMG_WIDTH, 1), dtype=np.bool)
+    images = []
+    masks = []
+    image_id = []
 
     for n, id_ in enumerate(ids):
         path = TRAIN_SAVE_PATH + id_ + '/'
@@ -40,12 +37,14 @@ def get_train_data():
 
         items = next(os.walk(path))[2]
         for item in items:
-            if item == NAME_SAVED_IMAGE:
-                images[n] = imread(path + NAME_SAVED_IMAGE)[:, :, :IMG_CHANNELS]
-            elif item == NAME_SAVED_MASK:
-                masks[n] = imread(path + NAME_SAVED_MASK).reshape((128, 128, 1))
+            if item.startswith(NAME_SAVED_IMAGE) and item.endswith(IMG_FORMAT):
+                name_mask = NAME_SAVED_MASK + item[len(NAME_SAVED_IMAGE):]
+                if os.path.isfile(path + name_mask):
+                    images.append(imread(path + item)[:, :, :IMG_CHANNELS])
+                    masks.append(imread(path + name_mask).reshape((128, 128, 1)))
+                    image_id.append(id_)
 
-    return images, masks, ids
+    return np.array(images), np.array(masks), np.array(image_id)
 
 
 def get_test_data():
@@ -54,15 +53,15 @@ def get_test_data():
         raise OSError
 
     # Get IDs
-    ids = next(os.walk(TEST_SAVE_PATH))[1]
+    ids_test = next(os.walk(TEST_SAVE_PATH))[1]
 
     # Get and resize images and masks
-    images = np.zeros((len(ids), IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS), dtype=np.uint8)
+    images_test = np.zeros((len(ids_test), IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS), dtype=np.uint8)
 
     # Sizes primary imgs
-    sizes = []
+    size_test = []
 
-    for n, id_ in enumerate(ids):
+    for n, id_ in enumerate(ids_test):
         path = TEST_SAVE_PATH + id_ + '/'
 
         if not os.path.isdir(path):
@@ -70,12 +69,12 @@ def get_test_data():
 
         items = next(os.walk(path))[2]
         for item in items:
-            if item == NAME_SAVED_IMAGE:
-                images[n] = imread(path + NAME_SAVED_IMAGE)[:, :, :IMG_CHANNELS]
+            if item.startswith(NAME_SAVED_IMAGE) and item.endswith(IMG_FORMAT):
+                images_test[n] = imread(path + item)[:, :, :IMG_CHANNELS]
 
-        sizes.append(np.load(path + 'sizes_test.npy'))
+        size_test.append(np.load(path + 'sizes_test.npy'))
 
-    return images, ids, sizes
+    return images_test, ids_test, size_test
 
 
 if __name__ == "__main__":
@@ -93,11 +92,13 @@ if __name__ == "__main__":
     sizes_test = []
 
     print('Getting and resizing images... ')
-    for PATH, imgs, ids in [(TRAIN_PATH, training_images, train_ids), (TEST_PATH, testing_images, test_ids)]:
+    for PATH, imgs, ids, sizes in [(TRAIN_PATH, training_images, train_ids, None),
+                                   (TEST_PATH, testing_images, test_ids, sizes_test)]:
         for n, id_ in enumerate(ids):
             path = PATH + id_
             img = imread(path + '/images/' + id_ + '.png')[:, :, :IMG_CHANNELS]
-            sizes_test.append([img.shape[0], img.shape[1]])
+            if sizes is not None:
+                sizes.append([img.shape[0], img.shape[1]])
             img = resize(img, (IMG_HEIGHT, IMG_WIDTH), mode='constant', preserve_range=True)
             imgs[n] = img
 
@@ -125,10 +126,10 @@ if __name__ == "__main__":
                 os.makedirs(path)
 
             if images is not None:
-                imsave(path + "/image.png", images[n])
+                imsave(path + "/" + NAME_SAVED_IMAGE + IMG_FORMAT, images[n])
 
             if masks is not None:
-                imsave(path + "/mask.png", masks[n].reshape((IMG_WIDTH, IMG_HEIGHT)))
+                imsave(path + "/" + NAME_SAVED_MASK + IMG_FORMAT, masks[n].reshape((IMG_WIDTH, IMG_HEIGHT)))
 
             if sizes is not None:
                 np.save(path + '/sizes_test', sizes[n])
