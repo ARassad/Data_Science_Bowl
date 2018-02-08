@@ -44,7 +44,7 @@ def get_train_data():
                     masks.append(imread(path + name_mask).reshape((128, 128, 1)))
                     image_id.append(id_)
 
-    return np.array(images), np.array(masks), np.array(image_id)
+    return np.array(images), np.array(masks).astype(np.bool), np.array(image_id)
 
 
 def get_test_data():
