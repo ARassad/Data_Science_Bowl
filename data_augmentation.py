@@ -27,7 +27,7 @@ def data_rotate():
                 if os.path.isfile(path + dp.NAME_SAVED_MASK + dp.IMG_FORMAT):
                     for nameSaved in [dp.NAME_SAVED_IMAGE, dp.NAME_SAVED_MASK]:
                         pic = imread(path + nameSaved + dp.IMG_FORMAT)
-                        for angle in [90,180,270]:
+                        for angle in [90, 180, 270]:
                             imsave(path + nameSaved + '_' + str(angle) + dp.IMG_FORMAT, rotate(pic, angle))
 
 
@@ -36,4 +36,3 @@ if __name__ == "__main__":
     warnings.filterwarnings('ignore', category=UserWarning, module='skimage')
 
     data_rotate()
-
