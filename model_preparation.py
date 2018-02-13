@@ -9,13 +9,13 @@ from keras.layers.convolutional import Conv2D, Conv2DTranspose
 from keras.layers.pooling import MaxPooling2D
 from keras.layers.merge import concatenate
 from keras.callbacks import EarlyStopping, ModelCheckpoint
-
+from keras.preprocessing.image import ImageDataGenerator
 from data_preparation import get_train_data, IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS
 from function import mean_iou
 
-seed = 42
-random.seed = seed
-np.random.seed = seed
+
+
+USE_DATA_GEN = True
 
 
 def model_128_128_3():
@@ -80,6 +80,21 @@ def model_128_128_3():
     return model
 
 
+def data_gen():
+
+    args = dict(shear_range=0.5,
+                rotation_range=50,
+                zoom_range=0.2,
+                width_shift_range=0.2,
+                height_shift_range=0.2,
+                fill_mode='reflect')
+
+    gen1 = ImageDataGenerator(**args)
+    gen2 = ImageDataGenerator(**args)
+
+    return gen1, gen2
+
+
 if __name__ == "__main__":
 
     X_train, Y_train, ids = get_train_data()
@@ -87,7 +102,31 @@ if __name__ == "__main__":
     model = model_128_128_3()
 
     # Fit model
-    earlystopper = EarlyStopping(patience=5, verbose=1)
+    earlystopper = EarlyStopping(patience=3, verbose=1)
     checkpointer = ModelCheckpoint('model-dsbowl2018-1.h5', verbose=1, save_best_only=True)
-    results = model.fit(X_train, Y_train, validation_split=0.1, batch_size=16, epochs=50,
-                        callbacks=[earlystopper, checkpointer])
+
+    if not USE_DATA_GEN:
+        model.fit(X_train, Y_train, validation_split=0.1, batch_size=16, epochs=50,
+                  callbacks=[earlystopper, checkpointer])
+    else:
+        img_gen, mask_gen = data_gen()
+
+        seed = 1
+
+        img_gen.fit(X_train, augment=True, seed=seed)
+        mask_gen.fit(Y_train, augment=True, seed=seed)
+
+        image_generator = img_gen.flow(X_train[:int(X_train.shape[0]*0.9)], seed=seed, batch_size=16)
+        mask_generator = mask_gen.flow(Y_train[:int(Y_train.shape[0]*0.9)], seed=seed, batch_size=16)
+
+        train_generator = zip(image_generator, mask_generator)
+
+        x_val = img_gen.flow(X_train[int(X_train.shape[0] * 0.9):], batch_size=16, shuffle=True,
+                                       seed=seed)
+        y_val = mask_gen.flow(Y_train[int(Y_train.shape[0] * 0.9):], batch_size=16, shuffle=True,
+                                      seed=seed)
+
+        val_generator = zip(x_val, y_val)
+
+        model.fit_generator(train_generator, steps_per_epoch=60, epochs=50,validation_data=val_generator, validation_steps=5,
+                            callbacks=[earlystopper, checkpointer])

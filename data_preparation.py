@@ -133,3 +133,17 @@ if __name__ == "__main__":
 
             if sizes is not None:
                 np.save(path + '/sizes_test', sizes[n])
+
+    for images, masks in [(training_images, training_masks)]:
+
+
+
+        for i in range(len(images)):
+            if not os.path.isdir(SAVE_PATH + 'images/' + str(i) + '/'):
+                os.makedirs(SAVE_PATH + 'images/' + str(i) + '/')
+            imsave(SAVE_PATH + 'images/' + str(i) + '/' + str(i) + IMG_FORMAT, images[i])
+
+        for i in range(len(masks)):
+            if not os.path.isdir(SAVE_PATH + 'masks/' + str(i) + '/'):
+                os.makedirs(SAVE_PATH + 'masks/' + str(i) + '/')
+            imsave(SAVE_PATH + 'masks/' + str(i) + '/' + str(i) + IMG_FORMAT, masks[i].reshape((IMG_WIDTH, IMG_HEIGHT)))
