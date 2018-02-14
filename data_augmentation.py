@@ -9,6 +9,7 @@ from skimage.io import imread, imsave
 import data_preparation as dp
 import numpy as np
 
+
 def data_rotate():
 
     if not os.path.isdir(dp.TRAIN_SAVE_PATH):
@@ -19,7 +20,6 @@ def data_rotate():
     print('Rotating images')
     for id_ in tqdm(ids, total=len(ids)):
         path = dp.TRAIN_SAVE_PATH + id_ + '/'
-
         if not os.path.isdir(path):
             raise OSError
 
@@ -30,13 +30,13 @@ def data_rotate():
                     for nameSaved in [dp.NAME_SAVED_IMAGE, dp.NAME_SAVED_MASK]:
                         pic = imread(path + nameSaved + dp.IMG_FORMAT)
                         for angle in [90, 180, 270]:
-                            imsave(path + nameSaved + '_' + str(angle) + dp.IMG_FORMAT, rotate(pic, angle, resize=True))
+                            array_cut_pic = cut_image(rotate(pic, angle, resize=True))
+                            for numpic, finalpic in enumerate(array_cut_pic):
+                                imsave(path + nameSaved + '_' + str(angle) + '_' + str(numpic) + dp.IMG_FORMAT,
+                                       finalpic)
 
 
 def data_white_black():
-
-    img_white_black = []
-    masks = []
 
     # Get train and test IDs
     train_ids_ = next(os.walk("data/stage1_train"))[1]
@@ -60,7 +60,17 @@ def data_white_black():
             mask_ = imread(path + mask_file)
             mask = np.maximum(mask, mask_)
 
-        imsave("data/input_data/train/"+ id_ + '/mask.png', mask)
+        imsave("data/input_data/train/" + id_ + '/mask.png', mask)
+
+
+def cut_image(nparr, w_cut=dp.IMG_WIDTH, h_cut=dp.IMG_HEIGHT):
+    h_img = nparr.shape[0]
+    w_img = nparr.shape[1]
+    for i in range(h_cut, h_img + h_cut//2, h_cut//2):
+        lower_bound = min(i, h_img)
+        for j in range(w_cut, w_img + w_cut//2, w_cut//2):
+            right_bound = min(int(j), w_img)
+            yield nparr[lower_bound-h_cut: lower_bound][right_bound-w_cut: right_bound]
 
 
 if __name__ == "__main__":
