@@ -1,5 +1,7 @@
 import os
 import warnings
+import sys
+
 from tqdm import tqdm
 
 from skimage.transform import rotate
@@ -15,7 +17,7 @@ def data_rotate():
     ids = next(os.walk(dp.TRAIN_SAVE_PATH))[1]
 
     print('Rotating images')
-    for id_ in tqdm.tqdm(ids, total=len(ids)):
+    for id_ in tqdm(ids, total=len(ids)):
         path = dp.TRAIN_SAVE_PATH + id_ + '/'
 
         if not os.path.isdir(path):
@@ -28,7 +30,7 @@ def data_rotate():
                     for nameSaved in [dp.NAME_SAVED_IMAGE, dp.NAME_SAVED_MASK]:
                         pic = imread(path + nameSaved + dp.IMG_FORMAT)
                         for angle in [90, 180, 270]:
-                            imsave(path + nameSaved + '_' + str(angle) + dp.IMG_FORMAT, rotate(pic, angle))
+                            imsave(path + nameSaved + '_' + str(angle) + dp.IMG_FORMAT, rotate(pic, angle, resize=True))
 
 
 def data_white_black():
@@ -48,7 +50,7 @@ def data_white_black():
         if not os.path.isdir(save_path):
             os.makedirs(save_path)
 
-        imsave(save_path + '/image_wh_bl.png', img)
+        imsave(save_path + '/image.png', img)
 
         path = "data/stage1_train/" + id_ + '/masks/'
         mask = np.zeros((img.shape[0], img.shape[1]), dtype=np.uint8)
@@ -58,11 +60,15 @@ def data_white_black():
             mask_ = imread(path + mask_file)
             mask = np.maximum(mask, mask_)
 
-        imsave("data/input_data/train/"+ id_ + '/mask_wh_bl.png', mask)
+        imsave("data/input_data/train/"+ id_ + '/mask.png', mask)
 
 
 if __name__ == "__main__":
 
     warnings.filterwarnings('ignore', category=UserWarning, module='skimage')
 
-    data_white_black()
+    if not sys.argv.__contains__('-grey'):
+        data_white_black()
+
+    if not sys.argv.__contains__('-rot'):
+        data_rotate()
