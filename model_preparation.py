@@ -18,9 +18,9 @@ from function import mean_iou
 USE_DATA_GEN = True
 
 
-def model_128_128_3():
+def model_Unet(height, width, channels):
     # Build U-Net model
-    inputs = Input((IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS))
+    inputs = Input((height, width, channels))
     s = Lambda(lambda x: x / 255)(inputs)
 
     c1 = Conv2D(16, (3, 3), activation='elu', kernel_initializer='he_normal', padding='same')(s)
@@ -83,7 +83,7 @@ def model_128_128_3():
 def data_gen():
 
     args = dict(shear_range=0.5,
-                rotation_range=50,
+                rotation_range=360,
                 zoom_range=0.2,
                 width_shift_range=0.2,
                 height_shift_range=0.2,
@@ -99,7 +99,7 @@ if __name__ == "__main__":
 
     X_train, Y_train, ids = get_train_data()
 
-    model = model_128_128_3()
+    model = model_Unet(IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
 
     # Fit model
     earlystopper = EarlyStopping(patience=3, verbose=1)

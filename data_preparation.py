@@ -77,23 +77,21 @@ def get_test_data():
     return images_test, ids_test, size_test
 
 
-if __name__ == "__main__":
-
-    warnings.filterwarnings('ignore', category=UserWarning, module='skimage')
+def get_source_data():
 
     # Get train and test IDs
-    train_ids = next(os.walk(TRAIN_PATH))[1]
-    test_ids = next(os.walk(TEST_PATH))[1]
+    train_ids_ = next(os.walk(TRAIN_PATH))[1]
+    test_ids_ = next(os.walk(TEST_PATH))[1]
 
     # Get and resize train images and masks
-    training_images = np.zeros((len(train_ids), IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS), dtype=np.uint8)
-    training_masks = np.zeros((len(train_ids), IMG_HEIGHT, IMG_WIDTH, 1), dtype=np.uint8)
-    testing_images = np.zeros((len(test_ids), IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS), dtype=np.uint8)
-    sizes_test = []
+    training_images_ = np.zeros((len(train_ids_), IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS), dtype=np.uint8)
+    training_masks_ = np.zeros((len(train_ids_), IMG_HEIGHT, IMG_WIDTH, 1), dtype=np.uint8)
+    testing_images_ = np.zeros((len(test_ids_), IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS), dtype=np.uint8)
+    sizes_test_ = []
 
     print('Getting and resizing images... ')
-    for PATH, imgs, ids, sizes in [(TRAIN_PATH, training_images, train_ids, None),
-                                   (TEST_PATH, testing_images, test_ids, sizes_test)]:
+    for PATH, imgs, ids, sizes in [(TRAIN_PATH, training_images_, train_ids_, None),
+                                   (TEST_PATH, testing_images_, test_ids_, sizes_test_)]:
         for n, id_ in enumerate(ids):
             path = PATH + id_
             img = imread(path + '/images/' + id_ + '.png')[:, :, :IMG_CHANNELS]
@@ -103,10 +101,10 @@ if __name__ == "__main__":
             imgs[n] = img
 
     print('Getting and resizing masks... ')
-    for n, id_ in tqdm(enumerate(train_ids), total=len(train_ids)):
+
+    for n, id_ in tqdm(enumerate(train_ids_), total=len(train_ids_)):
         path = TRAIN_PATH + id_ + '/masks/'
         mask = np.zeros((IMG_HEIGHT, IMG_WIDTH, 1), dtype=np.uint8)
-        ad = next(os.walk(path))[2]
         for mask_file in next(os.walk(path))[2]:
             if not mask_file.endswith('.png'):
                 continue
@@ -114,7 +112,16 @@ if __name__ == "__main__":
             mask_ = np.expand_dims(resize(mask_, (IMG_HEIGHT, IMG_WIDTH),
                                           mode='constant', preserve_range=True), axis=-1)
             mask = np.maximum(mask, mask_)
-        training_masks[n] = mask
+        training_masks_[n] = mask
+
+    return training_images_, training_masks_, train_ids_, testing_images_, test_ids_, sizes_test_
+
+
+if __name__ == "__main__":
+
+    warnings.filterwarnings('ignore', category=UserWarning, module='skimage')
+
+    training_images, training_masks, train_ids, testing_images, test_ids, sizes_test = get_source_data()
 
     print("Saving images and masks")
     for PATH, images, masks, ids, sizes in [(TRAIN_SAVE_PATH, training_images, training_masks, train_ids, None),
@@ -135,8 +142,6 @@ if __name__ == "__main__":
                 np.save(path + '/sizes_test', sizes[n])
 
     for images, masks in [(training_images, training_masks)]:
-
-
 
         for i in range(len(images)):
             if not os.path.isdir(SAVE_PATH + 'images/' + str(i) + '/'):
