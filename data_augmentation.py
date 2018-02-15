@@ -92,6 +92,29 @@ def cut_images():
 
 
 def remove_empty_img():
+    if not os.path.isdir(dp.TRAIN_SAVE_PATH):
+        raise OSError
+
+    ids = next(os.walk(dp.TRAIN_SAVE_PATH))[1]
+    print('remove empty image')
+    for id_ in tqdm(ids, total=len(ids)):
+        path = dp.TRAIN_SAVE_PATH + id_ + '/'
+        if not os.path.isdir(path):
+            raise OSError
+
+        items = next(os.walk(path))[2]
+        for item in items:
+            if os.path.isfile(path + item) and item.endswith(dp.IMG_FORMAT) and item.startswith(dp.NAME_SAVED_MASK):
+                pic = imread(path + item)
+                arr = pic.flatten()
+                is_not_black = False
+                for i in range(len(arr) - 1):
+                    if arr[i] != arr[i+1]:
+                        is_not_black = True
+                        break
+                if not is_not_black:
+                    os.remove(path + item)
+                    os.remove(path + dp.NAME_SAVED_IMAGE + item[len(dp.NAME_SAVED_MASK):])
 
 
 if __name__ == "__main__":
@@ -106,3 +129,6 @@ if __name__ == "__main__":
 
     if '-r' not in sys.argv:
         data_rotate()
+
+    if '-d' not in sys.argv:
+        remove_empty_img()
