@@ -25,15 +25,11 @@ def data_rotate():
 
         items = next(os.walk(path))[2]
         for item in items:
-            if item == dp.NAME_SAVED_IMAGE + dp.IMG_FORMAT:
-                if os.path.isfile(path + dp.NAME_SAVED_MASK + dp.IMG_FORMAT):
-                    for nameSaved in [dp.NAME_SAVED_IMAGE, dp.NAME_SAVED_MASK]:
-                        pic = imread(path + nameSaved + dp.IMG_FORMAT)
-                        for angle in [90, 180, 270]:
-                            array_cut_pic = cut_image(rotate(pic, angle, resize=True))
-                            for numpic, finalpic in enumerate(array_cut_pic):
-                                imsave(path + nameSaved + '_' + str(angle) + '_' + str(numpic) + dp.IMG_FORMAT,
-                                       finalpic)
+            if os.path.isfile(path + item) and item.endswith(dp.IMG_FORMAT):
+                    pic = imread(path + item)
+                    for angle in [90, 180, 270]:
+                        imsave(path + item[:-len(dp.IMG_FORMAT)] + '_' + str(angle) + dp.IMG_FORMAT,
+                               rotate(pic, angle, resize=True))
 
 
 def data_white_black():
@@ -41,7 +37,7 @@ def data_white_black():
     # Get train and test IDs
     train_ids_ = next(os.walk("data/stage1_train"))[1]
 
-    print('Getting and resizing images... ')
+    print('Transforming to grey... ')
     for id_ in tqdm(train_ids_, total=len(train_ids_)):
         path = "data/stage1_train/" + id_ + "/images/" + id_
         img = imread(path + '.png', as_grey=True)
@@ -67,18 +63,46 @@ def cut_image(nparr, w_cut=dp.IMG_WIDTH, h_cut=dp.IMG_HEIGHT):
     h_img = nparr.shape[0]
     w_img = nparr.shape[1]
     for i in range(h_cut, h_img + h_cut//2, h_cut//2):
-        lower_bound = min(i, h_img)
+        lower_bound = min(i, h_img - 1)
         for j in range(w_cut, w_img + w_cut//2, w_cut//2):
-            right_bound = min(int(j), w_img)
-            yield nparr[lower_bound-h_cut: lower_bound][right_bound-w_cut: right_bound]
+            right_bound = min(int(j), w_img - 1)
+            yield nparr[lower_bound-h_cut: lower_bound, right_bound-w_cut: right_bound]
+
+
+def cut_images():
+
+    if not os.path.isdir(dp.TRAIN_SAVE_PATH):
+        raise OSError
+
+    ids = next(os.walk(dp.TRAIN_SAVE_PATH))[1]
+
+    print('Cutting images')
+    for id_ in tqdm(ids, total=len(ids)):
+        path = dp.TRAIN_SAVE_PATH + id_ + '/'
+        if not os.path.isdir(path):
+            raise OSError
+
+        items = next(os.walk(path))[2]
+        for item in items:
+            if os.path.isfile(path + item) and item.endswith(dp.IMG_FORMAT):
+                pic = imread(path + item)
+                os.remove(path + item)
+                for n, img in enumerate(cut_image(pic)):
+                    imsave(path + item[:-len(dp.IMG_FORMAT)] + '_' + str(n) + dp.IMG_FORMAT, img)
+
+
+def remove_empty_img():
 
 
 if __name__ == "__main__":
 
     warnings.filterwarnings('ignore', category=UserWarning, module='skimage')
 
-    if not sys.argv.__contains__('-grey'):
+    if '-g' not in sys.argv:
         data_white_black()
 
-    if not sys.argv.__contains__('-rot'):
+    if '-c' not in sys.argv:
+        cut_images()
+
+    if '-r' not in sys.argv:
         data_rotate()
