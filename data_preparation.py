@@ -40,8 +40,8 @@ def get_train_data():
             if item.startswith(NAME_SAVED_IMAGE) and item.endswith(IMG_FORMAT):
                 name_mask = NAME_SAVED_MASK + item[len(NAME_SAVED_IMAGE):]
                 if os.path.isfile(path + name_mask):
-                    images.append(imread(path + item)[:, :, :IMG_CHANNELS])
-                    masks.append(imread(path + name_mask).reshape((128, 128, 1)))
+                    images.append(imread(path + item)[:IMG_HEIGHT, :IMG_WIDTH].reshape((128, 128, 1)))
+                    masks.append(imread(path + name_mask)[:IMG_HEIGHT, :IMG_WIDTH].reshape((128, 128, 1)))
                     image_id.append(id_)
 
     return np.array(images), np.array(masks).astype(np.bool), np.array(image_id)

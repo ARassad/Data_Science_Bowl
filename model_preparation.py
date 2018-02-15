@@ -14,8 +14,7 @@ from data_preparation import get_train_data, IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS
 from function import mean_iou
 
 
-
-USE_DATA_GEN = True
+USE_DATA_GEN = False
 
 
 def model_Unet(height, width, channels):
@@ -99,7 +98,7 @@ if __name__ == "__main__":
 
     X_train, Y_train, ids = get_train_data()
 
-    model = model_Unet(IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS)
+    model = model_Unet(IMG_HEIGHT, IMG_WIDTH, 1)
 
     # Fit model
     earlystopper = EarlyStopping(patience=3, verbose=1)
