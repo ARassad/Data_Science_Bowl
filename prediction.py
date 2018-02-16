@@ -14,6 +14,8 @@ warnings.filterwarnings('ignore', category=UserWarning, module='skimage')
 
 model = load_model('model-dsbowl2018-1.h5', custom_objects={'mean_iou': mean_iou})
 
+
+
 # Predict
 ids_test = next(os.walk(dp.TEST_PATH))[1]
 for n, id_ in enumerate(ids_test):
@@ -25,6 +27,8 @@ for n, id_ in enumerate(ids_test):
                         for p in da.cut_image(imread(path + item, as_grey=True))]
             X_test = np.array(cut_imgs, dtype=np.uint8)
             preds_test = model.predict(X_test, verbose=1)
+
+
 
 # Create list of upsampled test masks
 #preds_test_upsampled = []
