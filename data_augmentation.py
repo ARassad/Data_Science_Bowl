@@ -69,16 +69,16 @@ def cut_image(nparr, w_cut=dp.IMG_WIDTH, h_cut=dp.IMG_HEIGHT):
             yield nparr[lower_bound-h_cut: lower_bound, right_bound-w_cut: right_bound]
 
 
-def cut_images():
+def cut_images(dir=dp.TRAIN_SAVE_PATH):
 
-    if not os.path.isdir(dp.TRAIN_SAVE_PATH):
+    if not os.path.isdir(dir):
         raise OSError
 
-    ids = next(os.walk(dp.TRAIN_SAVE_PATH))[1]
+    ids = next(os.walk(dir))[1]
 
     print('Cutting images')
     for id_ in tqdm(ids, total=len(ids)):
-        path = dp.TRAIN_SAVE_PATH + id_ + '/'
+        path = dir + id_ + '/'
         if not os.path.isdir(path):
             raise OSError
 
