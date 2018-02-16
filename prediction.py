@@ -8,7 +8,7 @@ from keras.models import load_model
 import data_preparation as dp
 from function import mean_iou, prob_to_rles
 import data_augmentation as da
-from skimage.io import imread
+from skimage.io import imread, imsave
 
 warnings.filterwarnings('ignore', category=UserWarning, module='skimage')
 
@@ -23,10 +23,15 @@ for n, id_ in enumerate(ids_test):
     items = next(os.walk(path))[2]
     for item in items:
         if item.endswith(dp.IMG_FORMAT):
-            cut_imgs = [p.reshape((dp.IMG_HEIGHT, dp.IMG_WIDTH, dp.IMG_CHANNELS))
+            cut_imgs = [p[:dp.IMG_HEIGHT, :dp.IMG_WIDTH].reshape((dp.IMG_HEIGHT, dp.IMG_WIDTH, dp.IMG_CHANNELS))
                         for p in da.cut_image(imread(path + item, as_grey=True))]
-            X_test = np.array(cut_imgs, dtype=np.uint8)
+            X_test = np.array(cut_imgs)
             preds_test = model.predict(X_test, verbose=1)
+            for i in range(len(preds_test)):
+                imsave("data/OUTP/pred_" + str(i) + ".png", preds_test[i].reshape((dp.IMG_WIDTH, dp.IMG_HEIGHT)))
+            for i in range(len(X_test)):
+                imsave("data/OUTP/true_" + str(i) + ".png", X_test[i].reshape((dp.IMG_WIDTH, dp.IMG_HEIGHT)))
+
 
 
 
