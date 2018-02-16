@@ -1,29 +1,40 @@
 import warnings
 import numpy as np
 import pandas as pd
+import os
 
 from skimage.transform import resize
 from keras.models import load_model
-from data_preparation import get_test_data
+import data_preparation as dp
 from function import mean_iou, prob_to_rles
+import data_augmentation as da
+from skimage.io import imread
 
 warnings.filterwarnings('ignore', category=UserWarning, module='skimage')
 
-X_test, test_ids, sizes_test = get_test_data()
 model = load_model('model-dsbowl2018-1.h5', custom_objects={'mean_iou': mean_iou})
 
 # Predict
-preds_test = model.predict(X_test, verbose=1)
+ids_test = next(os.walk(dp.TEST_PATH))[1]
+for n, id_ in enumerate(ids_test):
+    path = dp.TEST_PATH + id_ + '/' + 'images/'
+    items = next(os.walk(path))[2]
+    for item in items:
+        if item.endswith(dp.IMG_FORMAT):
+            cut_imgs = [p.reshape((dp.IMG_HEIGHT, dp.IMG_WIDTH, dp.IMG_CHANNELS))
+                        for p in da.cut_image(imread(path + item, as_grey=True))]
+            X_test = np.array(cut_imgs, dtype=np.uint8)
+            preds_test = model.predict(X_test, verbose=1)
 
 # Create list of upsampled test masks
-preds_test_upsampled = []
-for i in range(len(preds_test)):
-    preds_test_upsampled.append(resize(np.squeeze(preds_test[i]), (sizes_test[i][0], sizes_test[i][1]),
-                                mode='constant', preserve_range=True))
+#preds_test_upsampled = []
+#for i in range(len(preds_test)):
+    #preds_test_upsampled.append(resize(np.squeeze(preds_test[i]), (sizes_test[i][0], sizes_test[i][1]),
+                                #mode='constant', preserve_range=True))
 
 new_test_ids = []
 rles = []
-for n, id_ in enumerate(test_ids):
+for n, id_ in enumerate(ids_test):
     rle = list(prob_to_rles(preds_test_upsampled[n]))
     rles.extend(rle)
     new_test_ids.extend([id_] * len(rle))
