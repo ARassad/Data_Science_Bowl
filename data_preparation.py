@@ -8,7 +8,7 @@ from skimage.transform import resize
 
 IMG_WIDTH = 128
 IMG_HEIGHT = 128
-IMG_CHANNELS = 3
+IMG_CHANNELS = 1
 TRAIN_PATH = 'data/stage1_train/'
 TEST_PATH = 'data/stage1_test/'
 SAVE_PATH = 'data/input_data/'
@@ -29,8 +29,11 @@ def get_train_data():
     masks = []
     image_id = []
 
-    for n, id_ in enumerate(ids):
+    for n, id_ in tqdm(enumerate(ids), total=len(ids)):
         path = TRAIN_SAVE_PATH + id_ + '/'
+
+        if n > 10:
+            break
 
         if not os.path.isdir(path):
             raise OSError
@@ -40,7 +43,8 @@ def get_train_data():
             if item.startswith(NAME_SAVED_IMAGE) and item.endswith(IMG_FORMAT):
                 name_mask = NAME_SAVED_MASK + item[len(NAME_SAVED_IMAGE):]
                 if os.path.isfile(path + name_mask):
-                    images.append(imread(path + item)[:IMG_HEIGHT, :IMG_WIDTH].reshape((128, 128, 1)))
+                    images.append(imread(path + item)[:IMG_HEIGHT, :IMG_WIDTH].reshape((IMG_HEIGHT, IMG_WIDTH,
+                                                                                        IMG_CHANNELS)))
                     masks.append(imread(path + name_mask)[:IMG_HEIGHT, :IMG_WIDTH].reshape((128, 128, 1)))
                     image_id.append(id_)
 
@@ -70,7 +74,7 @@ def get_test_data():
         items = next(os.walk(path))[2]
         for item in items:
             if item.startswith(NAME_SAVED_IMAGE) and item.endswith(IMG_FORMAT):
-                images_test[n] = imread(path + item)[:, :, :IMG_CHANNELS]
+                images_test[n] = imread(path + item, as_grey=True)[:, :].reshape((IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS))
 
         size_test.append(np.load(path + 'sizes_test.npy'))
 
