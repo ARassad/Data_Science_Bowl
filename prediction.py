@@ -12,8 +12,12 @@ warnings.filterwarnings('ignore', category=UserWarning, module='skimage')
 X_test, test_ids, sizes_test = get_test_data()
 model = load_model('model-dsbowl2018-1.h5', custom_objects={'mean_iou': mean_iou})
 
+
+
 # Predict
 preds_test = model.predict(X_test, verbose=1)
+
+
 
 # Create list of upsampled test masks
 preds_test_upsampled = []
