@@ -1,6 +1,7 @@
 import os
 import warnings
 import sys
+import random
 
 from tqdm import tqdm
 
@@ -131,6 +132,25 @@ def remove_empty_img():
                     os.remove(path + dp.NAME_SAVED_IMAGE + item[len(dp.NAME_SAVED_MASK):])
 
 
+def remove_part_data(part_to_del=0.5):
+    if not os.path.isdir(dp.TRAIN_SAVE_PATH):
+        raise OSError
+
+    ids = next(os.walk(dp.TRAIN_SAVE_PATH))[1]
+    print('remove part images')
+    for id_ in tqdm(ids, total=len(ids)):
+        path = dp.TRAIN_SAVE_PATH + id_ + '/'
+        if not os.path.isdir(path):
+            raise OSError
+
+        items = next(os.walk(path))[2]
+        for item in items:
+            if os.path.isfile(path + item) and item.endswith(dp.IMG_FORMAT) and item.startswith(dp.NAME_SAVED_IMAGE):
+                if random.randint(0, 100) <= part_to_del * 100:
+                    os.remove(path + item)
+                    os.remove(path + dp.NAME_SAVED_MASK + item[len(dp.NAME_SAVED_IMAGE):])
+
+
 if __name__ == "__main__":
 
     warnings.filterwarnings('ignore', category=UserWarning, module='skimage')
@@ -146,3 +166,6 @@ if __name__ == "__main__":
 
     if '-d' not in sys.argv:
         remove_empty_img()
+
+    if '-d' not in sys.argv:
+        remove_part_data(0.75)
