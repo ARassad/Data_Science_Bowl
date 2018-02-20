@@ -19,7 +19,7 @@ NAME_SAVED_MASK = 'mask'
 IMG_FORMAT = '.png'
 
 
-def get_train_data():
+def get_train_data(out_size=None):
     if not os.path.isdir(TRAIN_SAVE_PATH):
         raise OSError
 
@@ -30,10 +30,10 @@ def get_train_data():
     image_id = []
 
     for n, id_ in tqdm(enumerate(ids), total=len(ids)):
-        path = TRAIN_SAVE_PATH + id_ + '/'
-
-        if n > 10:
+        if out_size is not None and out_size < n:
             break
+
+        path = TRAIN_SAVE_PATH + id_ + '/'
 
         if not os.path.isdir(path):
             raise OSError
@@ -44,8 +44,9 @@ def get_train_data():
                 name_mask = NAME_SAVED_MASK + item[len(NAME_SAVED_IMAGE):]
                 if os.path.isfile(path + name_mask):
                     images.append(imread(path + item)[:IMG_HEIGHT, :IMG_WIDTH].reshape((IMG_HEIGHT, IMG_WIDTH,
-                                                                                        IMG_CHANNELS)))
-                    masks.append(imread(path + name_mask)[:IMG_HEIGHT, :IMG_WIDTH].reshape((128, 128, 1)))
+                                                                                        IMG_CHANNELS)).astype(np.uint8))
+                    masks.append(imread(path + name_mask)[:IMG_HEIGHT, :IMG_WIDTH].reshape((128, 128, 1))
+                                 .astype(np.uint8))
                     image_id.append(id_)
 
     return np.array(images), np.array(masks).astype(np.bool), np.array(image_id)

@@ -25,7 +25,7 @@ for i,id_ in enumerate(ids_test):
             h_img = img.shape[0]
             w_img = img.shape[1]
             
-            curimg = da.cut_image(img)
+            curimg = [pic[:dp.IMG_HEIGHT, :dp.IMG_WIDTH].reshape(128, 128, 1) for pic in da.cut_image(img)]
             f = model.predict(curimg, verbose=1)
             #imsave("data/OUTP/true_" + str(i) + ".png", da.glue_image(f, h_img, w_img))
             preds_test_upsampled[i] = da.glue_image(f, h_img, w_img)

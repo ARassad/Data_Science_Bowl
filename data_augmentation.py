@@ -167,5 +167,5 @@ if __name__ == "__main__":
     if '-d' not in sys.argv:
         remove_empty_img()
 
-    if '-d' not in sys.argv:
+    if '-p' not in sys.argv:
         remove_part_data(0.75)

@@ -20,9 +20,9 @@ USE_DATA_GEN = False
 def model_Unet(height, width, channels):
     # Build U-Net model
     inputs = Input((height, width, channels))
-    s = Lambda(lambda x: x / 255)(inputs)
+    #s = Lambda(lambda x: x / 255)(inputs)
 
-    c1 = Conv2D(16, (3, 3), activation='elu', kernel_initializer='he_normal', padding='same')(s)
+    c1 = Conv2D(16, (3, 3), activation='elu', kernel_initializer='he_normal', padding='same')(inputs)
     c1 = Dropout(0.1)(c1)
     c1 = Conv2D(16, (3, 3), activation='elu', kernel_initializer='he_normal', padding='same')(c1)
     p1 = MaxPooling2D((2, 2))(c1)
