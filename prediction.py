@@ -14,32 +14,28 @@ warnings.filterwarnings('ignore', category=UserWarning, module='skimage')
 
 model = load_model('model-dsbowl2018-1.h5', custom_objects={'mean_iou': mean_iou})
 
-
-
-# Predict
+preds_test_upsampled = []
 ids_test = next(os.walk(dp.TEST_PATH))[1]
-for n, id_ in enumerate(ids_test):
+for i,id_ in enumerate(ids_test):
     path = dp.TEST_PATH + id_ + '/' + 'images/'
     items = next(os.walk(path))[2]
     for item in items:
         if item.endswith(dp.IMG_FORMAT):
-            cut_imgs = [p[:dp.IMG_HEIGHT, :dp.IMG_WIDTH].reshape((dp.IMG_HEIGHT, dp.IMG_WIDTH, dp.IMG_CHANNELS))
-                        for p in da.cut_image(imread(path + item, as_grey=True))]
-            X_test = np.array(cut_imgs)
-            preds_test = model.predict(X_test, verbose=1)
-            for i in range(len(preds_test)):
-                imsave("data/OUTP/pred_" + str(i) + ".png", preds_test[i].reshape((dp.IMG_WIDTH, dp.IMG_HEIGHT)))
-            for i in range(len(X_test)):
-                imsave("data/OUTP/true_" + str(i) + ".png", X_test[i].reshape((dp.IMG_WIDTH, dp.IMG_HEIGHT)))
-
-
+            img = imread(path + item, as_grey=True)
+            h_img = img.shape[0]
+            w_img = img.shape[1]
+            
+            curimg = da.cut_image(img)
+            f = model.predict(curimg, verbose=1)
+            #imsave("data/OUTP/true_" + str(i) + ".png", da.glue_image(f, h_img, w_img))
+            preds_test_upsampled[i] = da.glue_image(f, h_img, w_img)
 
 
 # Create list of upsampled test masks
-#preds_test_upsampled = []
+
 #for i in range(len(preds_test)):
-    #preds_test_upsampled.append(resize(np.squeeze(preds_test[i]), (sizes_test[i][0], sizes_test[i][1]),
-                                #mode='constant', preserve_range=True))
+#preds_test_upsampled.append(resize(np.squeeze(preds_test[i]), (sizes_test[i][0], sizes_test[i][1]),
+#mode='constant', preserve_range=True))
 
 new_test_ids = []
 rles = []
