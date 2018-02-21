@@ -16,7 +16,7 @@ model = load_model('model-dsbowl2018-1.h5', custom_objects={'mean_iou': mean_iou
 
 preds_test_upsampled = []
 ids_test = next(os.walk(dp.TEST_PATH))[1]
-for i,id_ in enumerate(ids_test):
+for i, id_ in enumerate(ids_test):
     path = dp.TEST_PATH + id_ + '/' + 'images/'
     items = next(os.walk(path))[2]
     for item in items:
@@ -24,11 +24,13 @@ for i,id_ in enumerate(ids_test):
             img = imread(path + item, as_grey=True)
             h_img = img.shape[0]
             w_img = img.shape[1]
-            
-            curimg = [pic[:dp.IMG_HEIGHT, :dp.IMG_WIDTH].reshape(128, 128, 1) for pic in da.cut_image(img)]
+
+            curimg = np.array([pic[:dp.IMG_HEIGHT, :dp.IMG_WIDTH].reshape(128, 128, 1) for pic in da.cut_image(img)])
+            curimg = curimg * 255
+            curimg = curimg.astype(np.uint8)
             f = model.predict(curimg, verbose=1)
-            #imsave("data/OUTP/true_" + str(i) + ".png", da.glue_image(f, h_img, w_img))
-            preds_test_upsampled[i] = da.glue_image(f, h_img, w_img)
+            imsave("data/OUTP/true_" + str(i) + ".png", da.glue_image(f, h_img, w_img).reshape(h_img, w_img))
+            preds_test_upsampled.append(da.glue_image(f, h_img, w_img))
 
 
 # Create list of upsampled test masks
