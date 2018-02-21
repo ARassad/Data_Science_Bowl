@@ -29,7 +29,7 @@ for i, id_ in enumerate(ids_test):
             curimg = curimg * 255
             curimg = curimg.astype(np.uint8)
             f = model.predict(curimg, verbose=1)
-            pred_img = da.glue_image(f, h_img, w_img).reshape(h_img, w_img)
+            pred_img = da.glue_image(f, h_img, w_img, func_merg='mean').reshape(h_img, w_img)
             imsave("data/OUTP/true_" + str(i) + ".png", pred_img)
             preds_test_upsampled.append(pred_img)
 

@@ -92,17 +92,33 @@ def cut_images(dir=dp.TRAIN_SAVE_PATH):
                     imsave(path + item[:-len(dp.IMG_FORMAT)] + '_' + str(n) + dp.IMG_FORMAT, img)
 
 
-def glue_image(arr_img, h_img, w_img, w_cut=dp.IMG_WIDTH, h_cut=dp.IMG_HEIGHT):
-    
+def glue_image(arr_img, h_img, w_img, w_cut=dp.IMG_WIDTH, h_cut=dp.IMG_HEIGHT, func_merg='max'):
+
     maskres = np.zeros((h_img, w_img, 1), dtype=np.float32)
+
+    if func_merg == 'min':
+        maskres.fill(1)
+    elif func_merg == 'mean':
+        maskres.fill(0.45)
+
     cur_img = 0
     for i in range(h_cut, h_img + h_cut//2, h_cut//2):
         lower_bound = min(i, h_img - 1)
         for j in range(w_cut, w_img + w_cut//2, w_cut//2):
             right_bound = min(int(j), w_img - 1)
-            dfhg = np.maximum(maskres[lower_bound-h_cut: lower_bound, right_bound-w_cut: right_bound], arr_img[cur_img])
-            np.copyto(maskres[lower_bound-h_cut: lower_bound, right_bound-w_cut: right_bound],
-                      np.maximum(maskres[lower_bound-h_cut: lower_bound, right_bound-w_cut: right_bound], arr_img[cur_img]))
+
+            if func_merg == 'mean':
+                np.copyto(maskres[lower_bound-h_cut: lower_bound, right_bound-w_cut: right_bound],
+                          (maskres[lower_bound-h_cut: lower_bound, right_bound-w_cut: right_bound]+arr_img[cur_img])/2)
+            elif func_merg == 'min':
+                np.copyto(maskres[lower_bound-h_cut: lower_bound, right_bound-w_cut: right_bound],
+                          np.minimum(maskres[lower_bound-h_cut: lower_bound, right_bound-w_cut: right_bound],
+                                     arr_img[cur_img]))
+            else:
+                np.copyto(maskres[lower_bound - h_cut: lower_bound, right_bound - w_cut: right_bound],
+                          np.maximum(maskres[lower_bound - h_cut: lower_bound, right_bound - w_cut: right_bound],
+                                     arr_img[cur_img]))
+
             cur_img += 1
     return maskres
     
