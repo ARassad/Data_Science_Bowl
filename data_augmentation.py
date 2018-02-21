@@ -101,7 +101,7 @@ def glue_image(arr_img, h_img, w_img, w_cut=dp.IMG_WIDTH, h_cut=dp.IMG_HEIGHT):
         for j in range(w_cut, w_img + w_cut//2, w_cut//2):
             right_bound = min(int(j), w_img - 1)
             maskres[lower_bound-h_cut: lower_bound, right_bound-w_cut: right_bound] = \
-                np.maximum(maskres[lower_bound-h_cut: lower_bound, right_bound-w_cut: right_bound], arr_img)
+                np.maximum(maskres[lower_bound-h_cut: lower_bound, right_bound-w_cut: right_bound], arr_img[cur_img])
             cur_img += 1
     return maskres
     
