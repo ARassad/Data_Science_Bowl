@@ -29,8 +29,9 @@ for i, id_ in enumerate(ids_test):
             curimg = curimg * 255
             curimg = curimg.astype(np.uint8)
             f = model.predict(curimg, verbose=1)
-            imsave("data/OUTP/true_" + str(i) + ".png", da.glue_image(f, h_img, w_img).reshape(h_img, w_img))
-            preds_test_upsampled.append(da.glue_image(f, h_img, w_img))
+            pred_img = da.glue_image(f, h_img, w_img).reshape(h_img, w_img)
+            imsave("data/OUTP/true_" + str(i) + ".png", pred_img)
+            preds_test_upsampled.append(pred_img)
 
 
 # Create list of upsampled test masks

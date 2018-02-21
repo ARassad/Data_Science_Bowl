@@ -94,14 +94,15 @@ def cut_images(dir=dp.TRAIN_SAVE_PATH):
 
 def glue_image(arr_img, h_img, w_img, w_cut=dp.IMG_WIDTH, h_cut=dp.IMG_HEIGHT):
     
-    maskres = np.zeros((h_img, w_img, 1), dtype=np.uint8)
+    maskres = np.zeros((h_img, w_img, 1), dtype=np.float32)
     cur_img = 0
     for i in range(h_cut, h_img + h_cut//2, h_cut//2):
         lower_bound = min(i, h_img - 1)
         for j in range(w_cut, w_img + w_cut//2, w_cut//2):
             right_bound = min(int(j), w_img - 1)
-            maskres[lower_bound-h_cut: lower_bound, right_bound-w_cut: right_bound] = \
-                np.maximum(maskres[lower_bound-h_cut: lower_bound, right_bound-w_cut: right_bound], arr_img[cur_img])
+            dfhg = np.maximum(maskres[lower_bound-h_cut: lower_bound, right_bound-w_cut: right_bound], arr_img[cur_img])
+            np.copyto(maskres[lower_bound-h_cut: lower_bound, right_bound-w_cut: right_bound],
+                      np.maximum(maskres[lower_bound-h_cut: lower_bound, right_bound-w_cut: right_bound], arr_img[cur_img]))
             cur_img += 1
     return maskres
     
