@@ -123,7 +123,7 @@ def glue_image(arr_img, h_img, w_img, w_cut=dp.IMG_WIDTH, h_cut=dp.IMG_HEIGHT, f
     return maskres
     
     
-def remove_empty_img():
+def remove_empty_img(bound=0.01):
     if not os.path.isdir(dp.TRAIN_SAVE_PATH):
         raise OSError
 
@@ -139,12 +139,17 @@ def remove_empty_img():
             if os.path.isfile(path + item) and item.endswith(dp.IMG_FORMAT) and item.startswith(dp.NAME_SAVED_MASK):
                 pic = imread(path + item)
                 arr = pic.flatten()
-                is_not_black = False
-                for i in range(len(arr) - 1):
-                    if arr[i] != arr[i+1]:
-                        is_not_black = True
+                is_empty = True
+                limit = int(pic.shape[0] * pic.shape[1] * bound)
+                white_pix = 0
+                for i in range(len(arr)):
+                    white_pix += int(arr[i] > 0)
+
+                    if white_pix > limit:
+                        is_empty = False
                         break
-                if not is_not_black:
+
+                if is_empty:
                     os.remove(path + item)
                     os.remove(path + dp.NAME_SAVED_IMAGE + item[len(dp.NAME_SAVED_MASK):])
 
