@@ -43,16 +43,20 @@ def get_train_data(out_size=None):
 
         images.append(imread(path + "images/" + id_ + IMG_FORMAT).astype(np.uint8))
 
-        mask = np.zeros(images[-1].size)
+        mask = np.zeros(images[-1].shape[:2])
         items = next(os.walk(path + "masks/" ))[2]
+
+        masks.append([])
         for name_mask in items:
             name_mask = name_mask
-            if os.path.isfile(path + "masks" + name_mask):
-                mask = np.maximum(mask, item)
-
+            mask_path = path + "masks/" + name_mask
+            if os.path.isfile(mask_path):
+                mask_ = imread(mask_path)
+                mask = np.maximum(mask, mask_)
+        masks[n].append(mask)
         
 
-    return np.array(images), np.array(masks).astype(np.bool), np.array(image_id)
+    return np.array(images), np.array(masks), np.array(image_id)
 
 
 training_images_, training_masks_, train_ids_ = get_train_data()
@@ -62,10 +66,17 @@ sizes = (20, 20)
 goodImages = []
 coords = []
 
+
 for image, mask, i, id in training_images_, training_masks_, enumerate(train_ids_):
+
+    
+
     goodImages.append([])
     x, y = size[0], size[1]
     imsizes = image.sizes()
+    if not any( [any(image[i]) for i in range(sizes[1])]):
+        goodImages[i].append(image[0:sizes[1], 0:sizes[0]])
+    
     while x < imsizes[0]:
         while y < imsizes[1]:
             nextHorizontal = [im[x-ix][y+1] for ix in range(sizes[0])]
