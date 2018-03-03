@@ -3,6 +3,7 @@ import os
 import tqdm
 import warnings
 
+import random
 import numpy as np
 
 PATH_FROM = "../../data/stage1_train/"
@@ -75,7 +76,8 @@ def cut_nuclears():
                 print("EXCEPTION")
 
 
-def cut_non_nuclears(shape_win=(40, 40), strides=(40, 40), limit=(0.000, 0.02)):
+def cut_non_nuclears(shape_win=(40, 40), strides=(40, 40), limit=(0.000, 0.02), part_one_color_image=0.05,
+                     min_diff_color=5):
     ids = next(os.walk(PATH_FROM))[1]
     id_im = 0
     print("")
@@ -102,13 +104,17 @@ def cut_non_nuclears(shape_win=(40, 40), strides=(40, 40), limit=(0.000, 0.02)):
                 size = part_mask.shape[0] * part_mask.shape[1]
                 if size * limit[0] <= num_nuclea_pix(part_mask) <= size * limit[1]:
                     id_im += 1
-                    if not os.path.isdir(PATH_TO_NON_NUCL + id_ + "/images/"):
-                        os.makedirs(PATH_TO_NON_NUCL + id_ + "/images/")
-                    imsave(PATH_TO_NON_NUCL + id_ + "/images/" + str(id_im) + ".png", image[lower_bound-h_win: lower_bound,
-                                                                                       right_bound-w_win: right_bound])
-                    if not os.path.isdir(PATH_TO_NON_NUCL + id_ + "/masks/"):
-                        os.makedirs(PATH_TO_NON_NUCL + id_ + "/masks/")
-                    imsave(PATH_TO_NON_NUCL + id_ + "/masks/" + str(id_im) + ".png", part_mask.reshape(shape_win))
+                    save_image = image[lower_bound-h_win: lower_bound, right_bound-w_win: right_bound]
+
+                    if save_image.max() - save_image.min() > min_diff_color \
+                            or random.randint(0, 100) <= 100 * part_one_color_image:
+
+                        if not os.path.isdir(PATH_TO_NON_NUCL + id_ + "/images/"):
+                            os.makedirs(PATH_TO_NON_NUCL + id_ + "/images/")
+                        imsave(PATH_TO_NON_NUCL + id_ + "/images/" + str(id_im) + ".png", save_image)
+                        if not os.path.isdir(PATH_TO_NON_NUCL + id_ + "/masks/"):
+                            os.makedirs(PATH_TO_NON_NUCL + id_ + "/masks/")
+                        imsave(PATH_TO_NON_NUCL + id_ + "/masks/" + str(id_im) + ".png", part_mask.reshape(shape_win))
 
     return None
 
