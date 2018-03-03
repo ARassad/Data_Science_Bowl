@@ -9,9 +9,9 @@ from skimage.transform import resize
 IMG_WIDTH = 128
 IMG_HEIGHT = 128
 IMG_CHANNELS = 1
-TRAIN_PATH = 'data/stage1_train/'
-TEST_PATH = 'data/stage1_test/'
-SAVE_PATH = 'data/input_data/'
+TRAIN_PATH = '../data/stage1_train/'
+TEST_PATH = '../data/stage1_test/'
+SAVE_PATH = '../data/input_data/'
 TRAIN_SAVE_PATH = SAVE_PATH + 'train/'
 TEST_SAVE_PATH = SAVE_PATH + 'test/'
 NAME_SAVED_IMAGE = 'image'
