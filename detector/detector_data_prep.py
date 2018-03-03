@@ -5,6 +5,7 @@ import warnings
 
 import random
 import numpy as np
+from skimage.transform import resize
 
 PATH_FROM = "../../data/stage1_train/"
 PATH_TO = "../../data/detector/"
@@ -117,6 +118,33 @@ def cut_non_nuclears(shape_win=(40, 40), strides=(40, 40), limit=(0.000, 0.02), 
                         imsave(PATH_TO_NON_NUCL + id_ + "/masks/" + str(id_im) + ".png", part_mask.reshape(shape_win))
 
     return None
+
+
+def get_nucleas(max_size=None, dir=PATH_TO, shape=(100, 100), only_image=False):
+    ids = next(os.walk(dir))[1]
+
+    images = []
+    masks = []
+
+    for n, id_ in tqdm.tqdm(enumerate(ids), total=len(ids)):
+        if max_size is not None and n > max_size:
+            break
+
+        path = dir + id_
+        path_im = path + "/images/"
+        path_mk = path + "/masks/"
+
+        for im_id in next(os.walk(path_im))[2]:
+            if not im_id.endswith('.png'):
+                break
+
+            images.append(resize(imread(path_im + im_id, as_grey=True), shape, mode="constant", preserve_range=True))
+
+            if not only_image:
+                masks.append(
+                    resize(imread(path_mk + im_id, as_grey=True) / 255, shape, mode="constant", preserve_range=True))
+
+    return np.array(images), np.array(masks)
 
 
 def num_nuclea_pix(mask):
