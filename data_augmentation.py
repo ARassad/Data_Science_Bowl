@@ -33,6 +33,16 @@ def data_rotate():
                                rotate(pic, angle, resize=True))
 
 
+def rotate_images_in_directory(path):
+    items = next(os.walk(path))[2]
+    for item in items:
+        if os.path.isfile(path + item) and item.endswith(dp.IMG_FORMAT):
+            pic = imread(path + item)
+            for angle in [90, 180, 270]:
+                imsave(path + item[:-len(dp.IMG_FORMAT)] + '_' + str(angle) + dp.IMG_FORMAT,
+                       rotate(pic, angle, resize=True))
+
+
 def data_white_black(dir=dp.TRAIN_PATH, save_dir=dp.TRAIN_SAVE_PATH):
 
     # Get train and test IDs
