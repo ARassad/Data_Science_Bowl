@@ -11,10 +11,10 @@ dirr = "../../data/detector_pred/"
 
 if __name__ == "__main__":
 
-    h = 22
-    w = 22
+    h = 24
+    w = 24
 
-    model = load_model("detector.h5")
+    model = load_model("detector(24x24).h5")
 
     X_yes, masks = get_nucleas(None, dir=PATH_TO, only_image=False, shape=(h, w, 1))
     #X_non, _ = get_nucleas(None, dir=PATH_TO_NON_NUCL, only_image=True, shape=(h, w, 1))
@@ -32,9 +32,9 @@ if __name__ == "__main__":
             num += 1
             fig = plt.figure(figsize=(8, 4))
             fig.add_subplot(1, 2, 1)
-            plt.imshow(X_yes[n].reshape(22, 22))
+            plt.imshow(X_yes[n].reshape(h, w))
             fig.add_subplot(1, 2, 2)
-            plt.imshow(masks[n].reshape(22, 22))
+            plt.imshow(masks[n].reshape(h, w))
             plt.title(str(i[0]))
             #plt.show(block=True)
             plt.savefig("../../data/detector_pred/{}.png".format(n))

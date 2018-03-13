@@ -6,6 +6,7 @@ import numpy as np
 import data_preparation as dp
 from skimage.io import imread
 from skimage.transform import resize
+import warnings
 
 
 def get_data(dir_ids, size=(22, 22, 1), length=None):
@@ -31,6 +32,8 @@ def get_data(dir_ids, size=(22, 22, 1), length=None):
 
 
 if __name__ == "__main__":
+
+    warnings.filterwarnings('ignore', category=UserWarning, module='skimage')
 
     dir_ = "../../../data/detector/"
     ids = next(os.walk(dir_))[1]

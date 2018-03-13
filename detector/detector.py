@@ -35,7 +35,7 @@ def detector(win_h=22, win_w=22, win_ch=1, final_activation='sigmoid'):
 if __name__ == "__main__":
 
     size = None
-    h, w = 22, 22
+    h, w = 24, 24
 
     X_train, _ = get_nucleas(size, dir=PATH_TO, only_image=True, shape=(h, w, 1))
     Y_train = np.array([1] * len(X_train))
@@ -46,11 +46,11 @@ if __name__ == "__main__":
     X = np.concatenate((X_train, X_train_N))
     Y = np.concatenate((Y_train, Y_train_N))
 
-    model = detector()
+    model = detector(h, w)
 
     # Fit model
-    earlystopper = EarlyStopping(patience=5, verbose=1)
-    checkpointer = ModelCheckpoint('detector.h5', verbose=1, save_best_only=True)
+    earlystopper = EarlyStopping(patience=10, verbose=1)
+    checkpointer = ModelCheckpoint('detector(24x24).h5', verbose=1, save_best_only=True)
 
     model.fit(X, Y, validation_split=0.1, batch_size=16, epochs=50, shuffle=True,
               callbacks=[earlystopper, checkpointer])
