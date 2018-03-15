@@ -12,7 +12,7 @@ PATH_TO = "../../data/detector/"
 PATH_TO_NON_NUCL = "../../data/detector_non/"
 
 
-def cut_nuclears():
+def cut_nuclears(max_indent=5):
     ids = next(os.walk(PATH_FROM))[1]
 
     for id_ in tqdm.tqdm(ids, total=len(ids)):
@@ -66,6 +66,13 @@ def cut_nuclears():
                     break
 
             try:
+
+                # Отступы
+                right += min(random.randint(0, max_indent), image.shape[1]-right-1)
+                left -= min(random.randint(0, max_indent), left)
+                upper -= min(random.randint(0, max_indent), upper)
+                bottom += min(random.randint(0, max_indent), image.shape[0]-bottom-1)
+
                 if not os.path.isdir(PATH_TO + id_ + "/images/"):
                     os.makedirs(PATH_TO + id_ + "/images/" )
                 imsave(PATH_TO + id_ + "/images/" + m_id, image[upper:bottom, left:right])
@@ -77,7 +84,7 @@ def cut_nuclears():
                 print("EXCEPTION")
 
 
-def cut_non_nuclears(shape_win=(40, 40), strides=(40, 40), limit=(0.000, 0.02), part_one_color_image=0.05,
+def cut_non_nuclears(shape_win=(34, 34), strides=(40, 40), limit=(0.000, 0.03), part_one_color_image=0.03,
                      min_diff_color=5):
     ids = next(os.walk(PATH_FROM))[1]
     id_im = 0
@@ -105,6 +112,7 @@ def cut_non_nuclears(shape_win=(40, 40), strides=(40, 40), limit=(0.000, 0.02), 
                 size = part_mask.shape[0] * part_mask.shape[1]
                 if size * limit[0] <= num_nuclea_pix(part_mask) <= size * limit[1]:
                     id_im += 1
+
                     save_image = image[lower_bound-h_win: lower_bound, right_bound-w_win: right_bound]
 
                     if save_image.max() - save_image.min() > min_diff_color \
@@ -159,4 +167,5 @@ def num_nuclea_pix(mask):
 if __name__ == "__main__":
     warnings.filterwarnings('ignore', category=UserWarning, module='skimage')
 
-    cut_non_nuclears()
+    #cut_non_nuclears()
+    cut_nuclears()
