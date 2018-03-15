@@ -33,7 +33,8 @@ def detector(win_h=22, win_w=22, win_ch=1, final_activation='sigmoid'):
     return model
 
 
-def detector_mobilenet(win_h=22, win_w=22, win_ch=3, final_activation='sigmoid'):
+def detector_mobilenet(win_h=34, win_w=34, final_activation='sigmoid'):
+    win_ch = 3
     initial_model = applications.MobileNet(include_top=False, input_shape=(win_h, win_w, win_ch))
 
     x = initial_model.output
@@ -49,24 +50,43 @@ def detector_mobilenet(win_h=22, win_w=22, win_ch=3, final_activation='sigmoid')
 
 if __name__ == "__main__":
 
-    size = None
-    h, w = 24, 24
+    size = 1
+    h, w = 32, 32
 
-    X_train, _ = get_nucleas(size, dir=PATH_TO, only_image=True, shape=(h, w, 1))
+    X_train, _ = get_nucleas(size, dir=PATH_TO, only_image=True, shape=(h, w, 3), as_grey=False)
     Y_train = np.array([1] * len(X_train))
 
-    X_train_N, _ = get_nucleas(size, dir=PATH_TO_NON_NUCL, only_image=True, shape=(h, w, 1))
+    X_train_N, _ = get_nucleas(size, dir=PATH_TO_NON_NUCL, only_image=True, shape=(h, w, 3), as_grey=False)
     Y_train_N = [0] * len(X_train_N)
 
     X = np.concatenate((X_train, X_train_N))
     Y = np.concatenate((Y_train, Y_train_N))
 
-    model = detector(h, w)
-
     # Fit model
     earlystopper = EarlyStopping(patience=10, verbose=1)
     checkpointer = ModelCheckpoint('detector(24x24).h5', verbose=1, save_best_only=True)
 
-    model.fit(X, Y, validation_split=0.1, batch_size=16, epochs=50, shuffle=True,
-              callbacks=[earlystopper, checkpointer])
+    if False:
+        model = detector(h, w)
+        model.fit(X, Y, validation_split=0.1, batch_size=16, epochs=50, shuffle=True,
+                  callbacks=[earlystopper, checkpointer])
+    elif True:
+        detect, base_model = detector_mobilenet(h, w)
+        checkpointer = ModelCheckpoint('detector_MobileNet.h5', verbose=1, save_best_only=True)
+        for layer in base_model.layers:
+            layer.trainable = False
+
+        detect.fit(X, Y, validation_split=0.1, batch_size=16, epochs=50, shuffle=True,
+                   callbacks=[earlystopper, checkpointer])
+
+        # Fine - tune
+        if True:
+            print("Fine Tune")
+            for layer in detect.layers:
+                layer.trainable = True
+
+            checkpointer = ModelCheckpoint('detector_MobileNet_FineTune.h5', verbose=1, save_best_only=True)
+
+            detect.fit(X, Y, validation_split=0.1, batch_size=16, epochs=50, shuffle=True,
+                       callbacks=[earlystopper, checkpointer])
 

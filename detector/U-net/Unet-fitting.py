@@ -10,9 +10,9 @@ from keras.layers.pooling import MaxPooling2D
 from keras.layers.merge import concatenate
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from keras.preprocessing.image import ImageDataGenerator
-from data_preparation import get_train_data, IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS
+#from data_preparation import get_train_data, IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS
 from function import mean_iou
-import model_preparation as mp
+#import model_preparation as mp
 import os
 from tqdm import tqdm
 from Data import get_data
@@ -58,14 +58,15 @@ def model_Unet(height, width, channels):
 
 
 if __name__ == "__main__":
-    h, w, ch = 24, 24, 1
+    h, w, ch = 32, 32, 1
+    size = None
 
-    X_train, Y_train = get_data("../../../data/detector/", length=None, size=(h, w, ch))
+    X_train, Y_train = get_data("../../../data/detector/", length=size, size=(h, w, ch))
 
     model = model_Unet(h, w, ch)
 
     earlystopper = EarlyStopping(patience=10, verbose=1)
-    checkpointer = ModelCheckpoint('Unet().h5', verbose=1, save_best_only=True)
+    checkpointer = ModelCheckpoint('Unet(32x32).h5', verbose=1, save_best_only=True)
 
     model.fit(X_train, Y_train, validation_split=0.1, batch_size=16, epochs=50,
           callbacks=[earlystopper, checkpointer])

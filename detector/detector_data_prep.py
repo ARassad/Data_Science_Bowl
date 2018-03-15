@@ -84,7 +84,7 @@ def cut_nuclears(max_indent=5):
                 print("EXCEPTION")
 
 
-def cut_non_nuclears(shape_win=(34, 34), strides=(40, 40), limit=(0.000, 0.03), part_one_color_image=0.03,
+def cut_non_nuclears(shape_win=(32, 32), strides=(10, 10), limit=(0.01, 0.1), part_one_color_image=0.0001,
                      min_diff_color=5):
     ids = next(os.walk(PATH_FROM))[1]
     id_im = 0
@@ -116,7 +116,7 @@ def cut_non_nuclears(shape_win=(34, 34), strides=(40, 40), limit=(0.000, 0.03), 
                     save_image = image[lower_bound-h_win: lower_bound, right_bound-w_win: right_bound]
 
                     if save_image.max() - save_image.min() > min_diff_color \
-                            or random.randint(0, 100) <= 100 * part_one_color_image:
+                            or random.randint(0, 10000) <= 10000 * part_one_color_image:
 
                         if not os.path.isdir(PATH_TO_NON_NUCL + id_ + "/images/"):
                             os.makedirs(PATH_TO_NON_NUCL + id_ + "/images/")
@@ -128,11 +128,12 @@ def cut_non_nuclears(shape_win=(34, 34), strides=(40, 40), limit=(0.000, 0.03), 
     return None
 
 
-def get_nucleas(max_size=None, dir=PATH_TO, shape=(100, 100), only_image=False):
+def get_nucleas(max_size=None, dir=PATH_TO, shape=(100, 100), only_image=False, as_grey=True):
     ids = next(os.walk(dir))[1]
 
     images = []
     masks = []
+    i = 0
 
     for n, id_ in tqdm.tqdm(enumerate(ids), total=len(ids)):
         if max_size is not None and n > max_size:
@@ -146,11 +147,11 @@ def get_nucleas(max_size=None, dir=PATH_TO, shape=(100, 100), only_image=False):
             if not im_id.endswith('.png'):
                 break
 
-            images.append(resize(imread(path_im + im_id, as_grey=True), shape, mode="constant", preserve_range=True))
+            images.append(resize(imread(path_im + im_id, as_grey=as_grey), shape, mode="constant", preserve_range=True))
 
             if not only_image:
                 masks.append(
-                    resize(imread(path_mk + im_id, as_grey=True) / 255, shape, mode="constant", preserve_range=True))
+                    resize(imread(path_mk + im_id, as_grey=as_grey) / 255, shape, mode="constant", preserve_range=True))
 
     return np.array(images), np.array(masks)
 
@@ -167,5 +168,5 @@ def num_nuclea_pix(mask):
 if __name__ == "__main__":
     warnings.filterwarnings('ignore', category=UserWarning, module='skimage')
 
-    #cut_non_nuclears()
-    cut_nuclears()
+    cut_non_nuclears()
+    #cut_nuclears()
