@@ -1,9 +1,10 @@
 
 from keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout
-from keras.models import Sequential
+from keras.models import Sequential, Model
 from keras.callbacks import EarlyStopping, ModelCheckpoint
 from detector_data_prep import PATH_TO_NON_NUCL, PATH_TO, get_nucleas
 import numpy as np
+from keras import applications
 
 
 def detector(win_h=22, win_w=22, win_ch=1, final_activation='sigmoid'):
@@ -30,6 +31,20 @@ def detector(win_h=22, win_w=22, win_ch=1, final_activation='sigmoid'):
     model.summary()
 
     return model
+
+
+def detector_mobilenet(win_h=22, win_w=22, win_ch=3, final_activation='sigmoid'):
+    initial_model = applications.MobileNet(include_top=False, input_shape=(win_h, win_w, win_ch))
+
+    x = initial_model.output
+    x = Flatten()(x)
+    out = Dense(1, activation=final_activation)(x)
+
+    detector = Model(inputs=initial_model.input, outputs=out)
+    detector.compile(loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"])
+    detector.summary()
+
+    return detector, initial_model
 
 
 if __name__ == "__main__":
