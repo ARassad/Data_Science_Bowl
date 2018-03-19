@@ -33,7 +33,7 @@ def detector(win_h=22, win_w=22, win_ch=1, final_activation='sigmoid'):
     return model
 
 
-def detector_mobilenet(win_h=34, win_w=34, win_ch=1, final_activation='sigmoid'):
+def detector_mobilenet(win_h=32, win_w=32, win_ch=1, final_activation='sigmoid'):
 
     initial_model = applications.MobileNet(include_top=False, input_shape=(win_h, win_w, win_ch), weights=None)
 
@@ -56,7 +56,7 @@ if __name__ == "__main__":
     X_train, _ = get_nucleas(size, dir=PATH_TO, only_image=True, shape=(h, w, ch), as_grey=True)
     Y_train = np.array([1] * len(X_train))
 
-    X_train_N, _ = get_nucleas(size, dir=PATH_TO_NON_NUCL, only_image=True, shape=(h, w, ch), as_grey=True)
+    X_train_N, _ = get_nucleas(size, dir="../../data/detector_non_second/", only_image=True, shape=(h, w, ch), as_grey=True)
     Y_train_N = np.array([0] * len(X_train_N))
 
     X = np.concatenate((X_train, X_train_N))
@@ -65,7 +65,6 @@ if __name__ == "__main__":
     # Fit model
     earlystopper = EarlyStopping(patience=10, verbose=1)
 
-
     if False:
         checkpointer = ModelCheckpoint('detector(24x24).h5', verbose=1, save_best_only=True)
 
@@ -73,7 +72,7 @@ if __name__ == "__main__":
         model.fit(X, Y, validation_split=0.1, batch_size=16, epochs=50, shuffle=True,
                   callbacks=[earlystopper, checkpointer])
     elif True:
-        checkpointer = ModelCheckpoint('detector_MobileNet.h5', verbose=1, save_best_only=True)
+        checkpointer = ModelCheckpoint('detector_MobileNet_Second.h5', verbose=1, save_best_only=True)
 
         detect, _ = detector_mobilenet(h, w, ch)
 

@@ -9,7 +9,7 @@ from skimage.transform import resize
 
 PATH_FROM = "../../data/stage1_train/"
 PATH_TO = "../../data/detector/"
-PATH_TO_NON_NUCL = "../../data/detector_non/"
+PATH_TO_NON_NUCL = "../../data/detector_non_second/"
 
 
 def cut_nuclears(max_indent=5):
@@ -84,7 +84,7 @@ def cut_nuclears(max_indent=5):
                 print("EXCEPTION")
 
 
-def cut_non_nuclears(shape_win=(32, 32), strides=(10, 10), limit=(0.01, 0.1), part_one_color_image=0.0001,
+def cut_non_nuclears(shape_win=(32, 32), strides=(12, 12), limit=(0.19, 0.3), part_one_color_image=0.0001,
                      min_diff_color=5):
     ids = next(os.walk(PATH_FROM))[1]
     id_im = 0

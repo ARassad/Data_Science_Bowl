@@ -15,9 +15,9 @@ from nms import non_max_suppression_fast
 import matplotlib.patches as patches
 
 
-STRIDES = (2, 2)  # Шаги с которыми идет окошко детектора
+STRIDES = (4, 4)  # Шаги с которыми идет окошко детектора
 COEF_RES = 1.5  # Коэффицент с которым уменьшаеться размер картинки
-MIN_RESIZE = 3  #  Коэф минимального размера картинки
+MIN_RESIZE = 4  #  Коэф минимального размера картинки
 
 SIZE_IMAGE = (32, 32)
 
@@ -45,22 +45,22 @@ def save_result(sdir, source, res_mask, masks, bbs, bbs_nms, res_bbs=None, res_n
     fig.add_subplot(3, len(masks), 1)
     plt.imshow(source)
     plt.title("Исходное")
-    #fig.add_subplot(3, len(masks), 2)
-    #plt.imshow(res_mask)
-    #plt.title("Выход сети")
     fig.add_subplot(3, len(masks), 2)
+    plt.imshow(res_mask)
+    plt.title("Выход сети")
+    fig.add_subplot(3, len(masks), 3)
     plt.imshow(np.array(res_mask > 0.5, dtype=np.float64))
     plt.title("Маска для сабмита")
 
     if res_nms is not None and res_bbs is not None:
-        ax = fig.add_subplot(3, len(masks), 3)
+        ax = fig.add_subplot(3, len(masks), 4)
         plt.imshow(source)
         plt.title("До NMS")
         for b in res_bbs:
             ax.add_patch(
                 patches.Rectangle((b[0], b[1]), b[3] - b[1], b[2] - b[0], linewidth=1, edgecolor='r', facecolor='none'))
 
-        ax = fig.add_subplot(3, len(masks), 4)
+        ax = fig.add_subplot(3, len(masks), 5)
         plt.imshow(res_mask)
         plt.title("После NMS")
         for b in res_nms:
@@ -320,9 +320,11 @@ def main_merge_with_NMS():
     rles = []
 
     detector = None
+    detector_second = None
     with CustomObjectScope({'relu6': applications.mobilenet.relu6,
                             'DepthwiseConv2D': applications.mobilenet.DepthwiseConv2D}):
         detector = load_model('detector_MobileNet.h5')
+        detector_second = load_model('detector_MobileNet_Second.h5')
     u_net = load_model("U-net/Unet(32x32).h5", custom_objects={'mean_iou': mean_iou})
 
     dir_ = "../../data/stage1_test/"
@@ -374,10 +376,14 @@ def main_merge_with_NMS():
                         is_nucl = detector.predict(part_image_analis)[0][0]
 
                         if is_nucl > 0.99:
-                            bbs.append((right_bound - SIZE_IMAGE[0],
-                                        lower_bound - SIZE_IMAGE[1],
-                                        right_bound,
-                                        lower_bound))
+
+                            is_one_nucl = detector_second.predict(part_image_analis)[0][0]
+
+                            if is_one_nucl > 0.99:
+                                bbs.append((right_bound - SIZE_IMAGE[0],
+                                            lower_bound - SIZE_IMAGE[1],
+                                            right_bound,
+                                            lower_bound))
 
                 bounding_boxs.append(bbs)
                 bounding_boxs_nms.append(non_max_suppression_fast(np.array(bbs), 0.6))
