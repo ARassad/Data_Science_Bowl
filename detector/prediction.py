@@ -16,8 +16,9 @@ import matplotlib.patches as patches
 
 
 STRIDES = (4, 4)  # Шаги с которыми идет окошко детектора
-COEF_RES = 1.5  # Коэффицент с которым уменьшаеться размер картинки
+COEF_RES = 1.3  # Коэффицент с которым уменьшаеться размер картинки
 MIN_RESIZE = 4  #  Коэф минимального размера картинки
+MAX_RESIZE = 2
 
 SIZE_IMAGE = (32, 32)
 
@@ -70,6 +71,7 @@ def save_result(sdir, source, res_mask, masks, bbs, bbs_nms, res_bbs=None, res_n
     for i in range(len(masks)):
         ax = fig.add_subplot(3, len(masks), i+1+len(masks))
         plt.imshow(masks[i])
+        plt.title("{}".format(masks[i].shape))
         for b in bbs[i]:
             ax.add_patch(
                 patches.Rectangle((b[0], b[1]), b[3] - b[1], b[2] - b[0], linewidth=1, edgecolor='r', facecolor='none'))
@@ -77,6 +79,7 @@ def save_result(sdir, source, res_mask, masks, bbs, bbs_nms, res_bbs=None, res_n
     for i in range(len(masks)):
         ax = fig.add_subplot(3, len(masks), i+1+2*len(masks))
         plt.imshow(masks[i])
+        plt.title("{}".format(masks[i].shape))
         for b in bbs_nms[i]:
             ax.add_patch(
                 patches.Rectangle((b[0], b[1]), b[3] - b[1], b[2] - b[0], linewidth=1, edgecolor='r', facecolor='none'))
@@ -342,19 +345,19 @@ def main_merge_with_NMS():
             bounding_boxs = []
             bounding_boxs_nms = []
 
-            # Уменьшаем размер картинки
-            cur_size = (image.shape[0], image.shape[1])
+            # Создаем разные размеры исходной картинки
+            cur_size = (int(image.shape[0] * MAX_RESIZE), int(image.shape[1] * MAX_RESIZE))
             min_size = (image.shape[0] // MIN_RESIZE, image.shape[1] // MIN_RESIZE)
 
             images.append(image)
-            masks.append(np.zeros(cur_size, dtype=np.float64))
-            while SIZE_IMAGE[0] <= cur_size[0] >= min_size[0] and SIZE_IMAGE[1] <= cur_size[1] >= min_size[1]:
-                cur_size = (int(cur_size[0] // COEF_RES), int(cur_size[1] // COEF_RES))
-                if SIZE_IMAGE[0] > cur_size[0] or SIZE_IMAGE[1] > cur_size[1]:
-                    break
-
+            masks.append(np.zeros(image.shape, dtype=np.float64))
+            while True:
                 images.append(resize(image, cur_size, mode='constant', preserve_range=True))
                 masks.append(np.zeros(cur_size, dtype=np.float64))
+
+                cur_size = (int(cur_size[0] // COEF_RES), int(cur_size[1] // COEF_RES))
+                if cur_size[0] <= min_size[0] or cur_size[1] <= min_size[1]:
+                    break
 
             # Предсказание
             for i in range(len(images)):
@@ -373,13 +376,15 @@ def main_merge_with_NMS():
                                                right_bound - SIZE_IMAGE[1]: right_bound] \
                             .reshape((SIZE_IMAGE[0], SIZE_IMAGE[1], 1))
 
+                        # Говорит что в квадрате есть клетки
                         is_nucl = detector.predict(part_image_analis)[0][0]
 
                         if is_nucl > 0.99:
 
+                            # Говорит, что в квадрате только одна клетка
                             is_one_nucl = detector_second.predict(part_image_analis)[0][0]
 
-                            if is_one_nucl > 0.99:
+                            if is_one_nucl > 0.95:
                                 bbs.append((right_bound - SIZE_IMAGE[0],
                                             lower_bound - SIZE_IMAGE[1],
                                             right_bound,
@@ -390,7 +395,6 @@ def main_merge_with_NMS():
 
             result_mask = np.zeros(image.shape, dtype=np.float64)
             result_bbs = []
-            result_nms = []
 
             # Мержим все боксы
             for i in range(len(images)):
@@ -409,13 +413,13 @@ def main_merge_with_NMS():
             for box in result_nms:
                 im_to_unet = np.ndarray((1, SIZE_IMAGE[0], SIZE_IMAGE[1], 1), dtype=np.float64)
 
-                # Приводим квадратик ко входу в юнет
+                # Приводим размеры квадрата к размерам входа Юнет
                 im_to_unet[0] = resize(image[box[1]:box[3], box[0]:box[2]], SIZE_IMAGE,
                                        mode='constant', preserve_range=True).reshape((SIZE_IMAGE[0], SIZE_IMAGE[1], 1))
                 # Предсказывание
                 pred_mask = u_net.predict(im_to_unet)[0]
 
-                # Мержим в итоговую маску
+                # Возвращаем начальный размер и вставляем в итоговую маску
                 copy_arr_to_arr(result_mask[box[1]:box[3], box[0]:box[2]],
                                 resize(pred_mask, (box[3] - box[1], box[2] - box[0]), mode='constant', preserve_range=True),
                                 "mean_except_zero")
@@ -433,7 +437,7 @@ def main_merge_with_NMS():
             save_result("../../data/detector_unet_pred/{}.png".format(id_), image, mask_to_encde, images,
                         bounding_boxs, bounding_boxs_nms, result_bbs, result_nms)
 
-        except:
+        except StopIteration:
             print("Exception id: " + id_)
 
     # Create submission DataFrame
