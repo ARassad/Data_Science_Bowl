@@ -13,14 +13,16 @@ from keras import applications
 from keras.utils.generic_utils import CustomObjectScope
 from nms import non_max_suppression_fast
 import matplotlib.patches as patches
-
+from math import sqrt
+from prediction import load_obj
 
 STRIDES = (4, 4)  # Шаги с которыми идет окошко детектора
 COEF_RES = 1.3  # Коэффицент с которым уменьшаеться размер картинки
-MIN_RESIZE = 4  # Коэф минимального размера картинки
-MAX_RESIZE = 2
+MIN_RESIZE = 4 # Коэф минимального размера картинки
+MAX_RESIZE = 1
 
 SIZE_IMAGE = (32, 32)
+DIAG_IMAGE = sqrt((SIZE_IMAGE[0]**2) + (SIZE_IMAGE[1]**2))
 
 TRESHHOLD_FIRST_DETECTOR = 0.99
 TRESHHOLD_SECOND_DETECTOR = 0.95
@@ -477,12 +479,31 @@ def main_merge_with_NMS_optimizer():
 
     dir_ = "../../data/stage1_test/"
     #dir_ = "../../data/1/"
-    ids_test = os.walk(dir_)
-    ids = next(ids_test)[1]
+
+    # Считывание данных
+    test_data = []
+    print("Read data")
+    ids = next(os.walk(dir_))[1]
+    for n, id_ in tqdm(enumerate(ids), total=len(ids)):
+        path = dir_ + id_ + "/images/"
+        test_data.append(imread(path + id_ + ".png", as_grey=True))
+
+    # Подготовка данных
+    sizes_nucl = load_obj("../sizes_nuclears")
+    for i in range(len(test_data)):
+        median = sizes_nucl[ids[i]]
+        coef = median / DIAG_IMAGE
+
+        if coef < 1:
+            test_data[i] = resize(test_data[i],
+                                  (int(test_data[i].shape[0] / (median / DIAG_IMAGE)),
+                                   int(test_data[i].shape[1] / (median / DIAG_IMAGE))),
+                                  mode='constant', preserve_range=True)
+
+    ids = next(os.walk(dir_))[1]
     for n, id_ in tqdm(enumerate(ids), total=len(ids)):
         try:
-            path = dir_ + id_ + "/images/"
-            image = imread(path + id_ + ".png", as_grey=True)
+            image = test_data[n]
 
             images = []
             masks = []
